@@ -33,7 +33,7 @@ git clone https://github.com/twoj-login/AMiZW-request-json.git
 Potem wejdźcie do folderu projektu:
 
 ```bash
-cd AMiZW-react-character-form
+cd AMiZW-request-json
 ```
 
 ---
