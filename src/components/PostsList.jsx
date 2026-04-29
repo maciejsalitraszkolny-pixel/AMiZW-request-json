@@ -1,44 +1,60 @@
 import { useEffect, useState } from "react";
 import "./PostsList.css";
 
+// ROZSZERZENIE (na 5): Osobny komponent dla pojedynczego posta
+const PostCard = ({ post }) => {
+    const [isVisible, setIsVisible] = useState(true);
+
+    return (
+        <div className="post-card">
+            <div className="post-id">#{post.id}</div>
+            <h3>{post.title}</h3>
+            {isVisible && <p>{post.body}</p>}
+            {/* Dodatkowa funkcjonalność: ukrywanie treści */}
+            <button onClick={() => setIsVisible(!isVisible)} className="toggle-btn">
+                {isVisible ? "Ukryj treść" : "Pokaż treść"}
+            </button>
+        </div>
+    );
+};
+
 function PostsList() {
-    const posts = []; // TODO: zamień na stan
-    const loading = false; // TODO: zamień na stan
-    const error = ""; // TODO: zamień na stan
+    // Stan komponentu
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [searchTerm, setSearchTerm] = useState(""); // ROZSZERZENIE: Stan wyszukiwarki
 
     const fetchPosts = async () => {
-        // TODO:
-        // Ustaw loading na true
-
-        // TODO:
-        // Wyczyść poprzedni błąd
+        setLoading(true);
+        setError(""); // Wyczyść poprzedni błąd
 
         try {
-            // TODO:
-            // Pobierz dane z API:
-            // https://jsonplaceholder.typicode.com/posts
+            const response = await fetch("https://jsonplaceholder.typicode.com/posts");
 
-            // TODO:
-            // Sprawdź, czy odpowiedź jest poprawna
+            // Sprawdzenie poprawności odpowiedzi
+            if (!response.ok) {
+                throw new Error("Wystąpił problem z pobieraniem danych.");
+            }
 
-            // TODO:
-            // Sparsuj odpowiedź do JSON
-
-            // TODO:
-            // Zapisz tylko 10 pierwszych postów do stanu
+            const data = await response.json();
+            // Zapisanie tylko 10 pierwszych postów
+            setPosts(data.slice(0, 10));
         } catch (err) {
-            // TODO:
-            // Zapisz błąd do stanu
+            setError(err.message);
         } finally {
-            // TODO:
-            // Zakończ loading
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        // TODO:
-        // Wywołaj funkcję pobierającą dane po załadowaniu komponentu
+        fetchPosts();
     }, []);
+
+    // ROZSZERZENIE: Filtrowanie postów po tytule
+    const filteredPosts = posts.filter(post =>
+        post.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <section className="posts-section">
@@ -49,29 +65,37 @@ function PostsList() {
                         <p>Pobieranie danych z API w React</p>
                     </div>
 
-                    <button className="reload-btn">
-                        Pobierz ponownie
+                    <button className="reload-btn" onClick={fetchPosts} disabled={loading}>
+                        {loading ? "Pobieranie..." : "Pobierz ponownie"}
                     </button>
                 </div>
 
-                {loading && (
-                    <p className="info-message">Ładowanie danych...</p>
+                {/* ROZSZERZENIE: Wyszukiwarka */}
+                <div className="search-container">
+                    <input
+                        type="text"
+                        placeholder="Filtruj po tytule..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="search-input"
+                    />
+                </div>
+
+                {loading && <p className="info-message">Ładowanie danych...</p>}
+
+                {error && <p className="error-message" style={{ color: "red" }}>Błąd: {error}</p>}
+
+                {!loading && !error && (
+                    <div className="posts-grid">
+                        {filteredPosts.length > 0 ? (
+                            filteredPosts.map((post) => (
+                                <PostCard key={post.id} post={post} />
+                            ))
+                        ) : (
+                            <p>Nie znaleziono postów pasujących do kryteriów.</p>
+                        )}
+                    </div>
                 )}
-
-                {/* TODO:
-            Wyświetl komunikat błędu, jeśli wystąpił */}
-
-                {/* TODO:
-            Wyświetl listę postów, jeśli dane zostały pobrane poprawnie */}
-
-                {/* TODO:
-            Użyj map() do wyrenderowania postów */}
-
-                {/* TODO:
-            W każdej karcie pokaż:
-            - id posta
-            - tytuł
-            - treść */}
             </div>
         </section>
     );
